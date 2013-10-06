@@ -10,7 +10,7 @@
 
 typedef struct {
 	int thread_id;
-	lightweight_thread_struct* next;
+	void* next;
 } lightweight_thread_struct;
 
 typedef lightweight_thread_struct* lwt_t;
