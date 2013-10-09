@@ -1,10 +1,13 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include "thread.h"
+
 
 int
 main(int argc, char **argv)
 {
 
+	__lwt_trampoline(2,3,4);
 	//__lwt_start_test(2,3,4);
 
 

@@ -1,5 +1,5 @@
-OBJS=main.o thread.o
-CFLAGS=-g -I. -Wall -Wextra -lpthread -ggdb3
+OBJS=main.o thread.o trampoline.S
+CFLAGS=-g -I. -Wall -Wextra -lpthread -ggdb3 -m32 #-masm=intel
 #DEFINES=-DTHINK_TIME
 BIN=hw2
 CC=gcc
