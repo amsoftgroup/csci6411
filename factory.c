@@ -8,7 +8,6 @@
  *  Program Counter
  *  Registers
  */
-
 #include <stdlib.h>
 #include <stdio.h>
 #include "linkedlist.h"

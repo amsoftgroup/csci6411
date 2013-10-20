@@ -8,20 +8,15 @@
 #ifndef LINKEDLIST_H_
 #define LINKEDLIST_H_
 
-struct local_variables{
-	int return_address;
-	// more local vars declared below
-	// ...
+//#include "thread.h"
 
-};
-
-struct node {
-	struct local_variables vars;
+typedef struct node {
+	int data;
 	struct node* next;
-};
+} node;
 
-void PushToHead(struct node** headRef, struct local_variables newData);
-void AppendToTail( struct node** headRef, int num);
+void PushToHead(struct node** headRef, int data);
+void AppendToTail(struct node** headRef, int num);
 int Length(struct node* head);
 int PopFromHead(struct node** headRef);
 
