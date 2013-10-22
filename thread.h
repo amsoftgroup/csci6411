@@ -43,6 +43,9 @@ int lwt_yeild(lwt_t);
 lwt_t lwt_current(void);
 int lwt_id(lwt_t);
 
-
+int __Runqueue_add(lwt_t);
+int __Runqueue_remove(lwt_t);
+int __Waitqueue_add(lwt_t);
+int __Waitqueue_remove(lwt_t);
 
 #endif /* THREAD_ */

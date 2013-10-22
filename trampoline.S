@@ -3,41 +3,16 @@
 .globl __lwt_trampoline
 __lwt_trampoline:
 
-/* caller saves all registers to stack */
-
-//pushal
+/* caller saves registers to stack */
 push %ebp
 mov  %esp, %ebp
-/* swap stack pointer with base pointer so we have constant, unchanging frame of reference */
-//
 
-
-/* allocate 64 bytes temp memory for local vars in callee function */
-//	sub $0x40, %esp
-
-/* push parameters for our function call */
-
-	push 0x18(%ebp)
-	push 0x14(%ebp)
-	push 0x10(%ebp)
-	push 0x0C(%ebp)
-	push 0x08(%ebp)
+	push 0x0C(%ebp) // (void *) data pointer to lwt_t... this gives us access to the TCB
+	//push 0x08(%ebp) // first parameter passed in... function address to call
 
 /* call to C function with above parameters, demonstrating basic understanding of cdecl */
-	call  __lwt_start_test5
+	call 0x08(%ebp)
 
-/* swap back base pointer to stack pointer */
-
-//
 /* restore our registers */
  mov %ebp, %esp
  pop %ebp
-//popal
-
-
-
-ret
-
-
-
-
