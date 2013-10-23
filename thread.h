@@ -45,6 +45,7 @@ int lwt_id(lwt_t);
 
 int __Runqueue_add(lwt_t);
 int __Runqueue_remove(lwt_t);
+lwt_t __Runqueue_pop(void);
 int __Waitqueue_add(lwt_t);
 int __Waitqueue_remove(lwt_t);
 

@@ -11,93 +11,91 @@ int sp = -1;
 int ip = -1;
 volatile lwt_t runqueue;
 volatile lwt_t waitqueue;
-
+volatile lwt_t current_thread;
 /**
  *  lwt_create: create a thread based on input, and add that thread to the runqueue.
  *  input: a function location and a pointer to the function's parameters.
  *  output: the newly created thread
  */
-lwt_t
-lwt_create(lwt_fn_t fn, void *data)
-{
-	lwt_t thd_ptr = (lightweight_thread_struct *) malloc(sizeof(lightweight_thread_struct));
-	printf("fn %p\n", fn);
-
-	__lwt_trampoline(fn, (void *)thd_ptr);
-
-	thd_ptr->thread_id = max_thread_id++;
-	thd_ptr->fn = fn;
-	thd_ptr->state = ready;
-	__Runqueue_add(thd_ptr);
-	printf("in lwt_create: %p %i\n", fn, runqueue->thread_id);
-	return thd_ptr;
-}
-
-void
-*lwt_join(lwt_t thread)
-{
-	// free the stack of the dieing thread here
-}
-
-void
-lwt_die(void * thread)
-{
-
-}
-
-int
-lwt_yeild(lwt_t thread){
-
-	/*** remove thread from runqueue, add to waitqueue
-	 * reassign next thread to point to previous,
-	 * and previous to point to the next.
-	 */
-	printf("yeilding thread id=%i\n",thread->thread_id );
-
-	if (thread == NULL){
-		// special case:
+	lwt_t
+	lwt_create(lwt_fn_t fn, void *data)
+	{
+		lwt_t thd_ptr = (lightweight_thread_struct *) malloc(sizeof(lightweight_thread_struct));
+		printf("fn %p\n", fn);
+		thd_ptr->thread_id = max_thread_id++;
+		thd_ptr->fn = fn;
+		thd_ptr->state = ready;
+		__Runqueue_add(thd_ptr);
+		printf("in lwt_create: %p %i\n", fn, runqueue->thread_id);
+		return thd_ptr;
 	}
 
-	thread->state = waiting;
-	__Runqueue_remove(thread);
-	__Waitqueue_add(thread);
-
-}
-
-lwt_t
-lwt_current(void)
-{
-	return NULL;
-}
-
-
-int
-lwt_id(lwt_t thread)
-{
-
-	//lightweight_thread_struct t = *thread;
-	// return t.thread_id;
-
-	return -1;
-
-}
-
-void
-__lwt_schedule(void)
-{
-	// pop the next value off the runqueue!
-	lwt_t thread  = __Runqueue_pop();
-
-
-}
-
+	void
+	*lwt_join(lwt_t thread)
+	{
+		// free the stack of the dieing thread here
+	}
 
 	void
-	__lwt_dispatch(lwt_t next, lwt_t current)
+	lwt_die(void * thread)
 	{
 
 	}
 
+	int
+	lwt_yeild(lwt_t thread){
+
+		/*** remove thread from runqueue, add to waitqueue
+		 * reassign next thread to point to previous,
+		 * and previous to point to the next.
+		 */
+		printf("yeilding thread id=%i\n",thread->thread_id );
+
+		if (thread == NULL){
+			// special case:
+		}
+
+		thread->state = waiting;
+		__Runqueue_remove(thread);
+		__Waitqueue_add(thread);
+
+	}
+
+	lwt_t
+	lwt_current(void)
+	{
+		return current_thread;
+	}
+
+
+	int
+	lwt_id(lwt_t thread)
+	{
+		lightweight_thread_struct t = *thread;
+		return t.thread_id;
+	}
+
+	void
+	__lwt_schedule(void)
+	{
+		// pop the next value off the runqueue!
+		lwt_t thread  = __Runqueue_pop();
+		if (thread == NULL){
+			// no work to be done. don't switch contexts, keep on current thread!
+			return;
+		}else{
+			__lwt_trampoline(thread->fn, thread);
+		}
+	}
+
+	void
+	__lwt_dispatch(lwt_t next, lwt_t current)
+	{
+		__Runqueue_remove(current);
+		__Waitqueue_add(current);
+		__Waitqueue_remove(next);
+		__Runqueue_add(next);
+	}
 
 	void
 	__lwt_start(void)
@@ -124,7 +122,7 @@ __lwt_schedule(void)
 		return 1;
 	}
 
-	lwt_t __Runqueue_pop(void){
+	lwt_t __Runqueue_pop(){
 
 		// TODO: no need to handle NULL runqueue, we shouldn't end up here
 		// learn and use assert() in C
