@@ -20,6 +20,7 @@ main(int argc, char **argv)
 		lwt_t new_thread_4 = lwt_create(__lwt_start_test0, data);
 		//lwt_yeild(NULL); // seg fault
 		lwt_yeild(new_thread_2);
+		__lwt_schedule();
 	}
 	return 1;
 }

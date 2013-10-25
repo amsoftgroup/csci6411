@@ -46,11 +46,6 @@ volatile lwt_t current_thread;
 	int
 	lwt_yeild(lwt_t thread){
 
-		/*** remove thread from runqueue, add to waitqueue
-		 * reassign next thread to point to previous,
-		 * and previous to point to the next.
-		 */
-
 		if (thread == NULL){
 			printf("empty runqueue, do nothing");
 			return -1;
@@ -61,9 +56,10 @@ volatile lwt_t current_thread;
 
 		printf("yeilding thread id=%i\n",thread->thread_id );
 
-		thread->state = waiting;
-		__Runqueue_remove(thread);
-		__Waitqueue_add(thread);
+		//thread->state = waiting;
+		//__Runqueue_remove(thread);
+		//__Waitqueue_add(thread);
+
 		return 1;
 	}
 
@@ -85,15 +81,8 @@ volatile lwt_t current_thread;
 	__lwt_schedule(void)
 	{
 		// pop the next value off the runqueue!
-		/*
 		lwt_t thread  = __Runqueue_pop();
-		if (thread == NULL){
-			// no work to be done. don't switch contexts, keep on current thread!
-			return;
-		}else{
-			__lwt_trampoline(thread->fn, thread);
-		}
-		*/
+		__lwt_dispatch(thread, current_thread);
 	}
 
 	void
@@ -103,6 +92,12 @@ volatile lwt_t current_thread;
 		__Waitqueue_add(current);
 		__Waitqueue_remove(next);
 		__Runqueue_add(next);
+
+		printf("popping: id=%i and sending %i to trampoline\n",current->thread_id, next->thread_id );
+		__lwt_trampoline(next->fn, next);
+
+		current_thread = next;
+
 	}
 
 	void
