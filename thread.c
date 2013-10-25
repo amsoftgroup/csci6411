@@ -12,6 +12,7 @@ int ip = -1;
 volatile lwt_t runqueue;
 volatile lwt_t waitqueue;
 volatile lwt_t current_thread;
+
 /**
  *  lwt_create: create a thread based on input, and add that thread to the runqueue.
  *  input: a function location and a pointer to the function's parameters.
@@ -49,16 +50,21 @@ volatile lwt_t current_thread;
 		 * reassign next thread to point to previous,
 		 * and previous to point to the next.
 		 */
-		printf("yeilding thread id=%i\n",thread->thread_id );
 
 		if (thread == NULL){
-			// special case:
+			printf("empty runqueue, do nothing");
+			return -1;
+		}else if (thread->prev_thread == NULL){
+			printf("only one thread in runqueue: not yeilding: id=%i\n",thread->thread_id );
+			return -1;
 		}
+
+		printf("yeilding thread id=%i\n",thread->thread_id );
 
 		thread->state = waiting;
 		__Runqueue_remove(thread);
 		__Waitqueue_add(thread);
-
+		return 1;
 	}
 
 	lwt_t
@@ -79,6 +85,7 @@ volatile lwt_t current_thread;
 	__lwt_schedule(void)
 	{
 		// pop the next value off the runqueue!
+		/*
 		lwt_t thread  = __Runqueue_pop();
 		if (thread == NULL){
 			// no work to be done. don't switch contexts, keep on current thread!
@@ -86,6 +93,7 @@ volatile lwt_t current_thread;
 		}else{
 			__lwt_trampoline(thread->fn, thread);
 		}
+		*/
 	}
 
 	void
@@ -105,21 +113,21 @@ volatile lwt_t current_thread;
 	}
 
 	int __Runqueue_add(lwt_t thd_ptr){
-		/**
-		 * add thread to runqueue
-		 */
+
 		if (runqueue == NULL){
+			printf("## runqueue null inserting %i\n",thd_ptr->thread_id );
 			// create new runqueue: is empty
 			runqueue = thd_ptr;
-			runqueue->prev_thread = NULL;
-			runqueue->next_thread = NULL;
+			printf("## runqueue is now %i\n",thd_ptr->thread_id );
 		}else{
+			printf("## runqueue inserting %i\n",thd_ptr->thread_id );
 			//add to head
-			runqueue->next_thread = thd_ptr;
 			thd_ptr->prev_thread = runqueue;
+			runqueue->next_thread = thd_ptr;
 			runqueue = thd_ptr;
+			printf("## runqueue is now  %i\n",runqueue->thread_id );
 		}
-		return 1;
+		return thd_ptr->thread_id;
 	}
 
 	lwt_t __Runqueue_pop(){
@@ -129,7 +137,9 @@ volatile lwt_t current_thread;
 
 		lwt_t ret_thread = runqueue;
 		lwt_t prev_thread = runqueue->prev_thread;
+		lwt_t prev_prev_thread = prev_thread->prev_thread;
 		prev_thread->next_thread = NULL;
+		prev_thread->prev_thread = prev_prev_thread;
 		runqueue = prev_thread;
 		return ret_thread;
 	}
@@ -137,40 +147,63 @@ volatile lwt_t current_thread;
 
 	int __Runqueue_remove(lwt_t thread){
 
+		int found = 0;
+		lwt_t prev_thread = NULL;
+		lwt_t next_thread = NULL;
+
 		while (runqueue->prev_thread != NULL){
 			printf("runqueue %i\n",runqueue->thread_id );
-			printf("thread_id %i\n",thread->thread_id );
+			//printf("thread_id %i\n",thread->thread_id );
 
 			if (runqueue->thread_id == thread->thread_id){
 
-				lwt_t prev_thread = runqueue->prev_thread;
-				printf("##prev_thread %i\n",prev_thread->thread_id );
-				lwt_t next_thread = runqueue->next_thread;
-				printf("##next_thread %i\n",next_thread->thread_id );
-				prev_thread->next_thread = runqueue->next_thread;
-				next_thread->prev_thread = runqueue->prev_thread;
-				printf("FOUND thread %i\n",runqueue->thread_id );
+				printf("## thread %i = %i\n",runqueue->thread_id, thread->thread_id );
 
+				if (thread->prev_thread != NULL){
+					prev_thread = thread->prev_thread;
+					prev_thread->next_thread = thread->next_thread;
+				}
+				if (thread->next_thread != NULL){
+					next_thread = thread->next_thread;
+					next_thread->prev_thread = thread->prev_thread;
+				}
+
+				//printf("## before next_thread %i\n",next_thread->thread_id );
+				//printf("## before prev_thread %i\n",prev_thread->thread_id );
+
+				//prev_thread->next_thread = next_thread;
+				//next_thread->prev_thread = prev_thread;
+
+				//printf("##next_thread %i\n",next_thread->thread_id);
+				printf("##runqueue %i\n",runqueue->thread_id );
+				//printf("##thread removed %i\n",thread->thread_id );
+				//printf("##prev_thread %i\n",prev_thread->thread_id );
+				found = 1;
 			}
-			runqueue = runqueue->prev_thread;
+			if (found){
+				break;
+			}else{
+				runqueue = runqueue->prev_thread;
+			}
 		}
 	}
 
 	int __Waitqueue_add(lwt_t thd_ptr){
 
 		if (waitqueue == NULL){
-			// create new runqueue: is empty
+			printf("## waitqueue null inserting %i\n",thd_ptr->thread_id );
+			// create new waitqueue: is empty
 			waitqueue = thd_ptr;
-			waitqueue->prev_thread = NULL;
-			waitqueue->next_thread = NULL;
+			printf("## waitqueue is now %i\n",thd_ptr->thread_id );
 		}else{
+			printf("## waitqueue inserting %i\n",thd_ptr->thread_id );
 			//add to head
-			waitqueue->next_thread = thd_ptr;
 			thd_ptr->prev_thread = waitqueue;
+			waitqueue->next_thread = thd_ptr;
 			waitqueue = thd_ptr;
-
+			printf("## waitqueue is now  %i\n",waitqueue->thread_id );
 		}
-		return 1;
+		return thd_ptr->thread_id;
 	}
 
 	int __Waitqueue_remove(lwt_t thread){
@@ -193,8 +226,9 @@ volatile lwt_t current_thread;
 		}
 
 		return 1;
+	}
 
-}
+
 
 
 

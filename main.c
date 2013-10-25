@@ -13,9 +13,13 @@ main(int argc, char **argv)
 	for (z = 0; z < 5; z++){
 		//lwt_fn_t callee = (void *) &__lwt_start_test0;
 		void* data;
-		lwt_t new_thread = lwt_create(__lwt_start_test0, data);
-		//lwt_yeild(NULL);
-		//lwt_yeild(new_thread3);
+		lwt_t new_thread_0 = lwt_create(__lwt_start_test0, data);
+		lwt_t new_thread_1 = lwt_create(__lwt_start_test0, data);
+		lwt_t new_thread_2 = lwt_create(__lwt_start_test0, data);
+		lwt_t new_thread_3 = lwt_create(__lwt_start_test0, data);
+		lwt_t new_thread_4 = lwt_create(__lwt_start_test0, data);
+		//lwt_yeild(NULL); // seg fault
+		lwt_yeild(new_thread_2);
 	}
 	return 1;
 }
