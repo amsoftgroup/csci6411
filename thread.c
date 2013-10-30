@@ -33,12 +33,14 @@ volatile lwt_t current_thread;
 		printf("in lwt_create: stack=%i, %i\n", stack, thd_ptr->sp_init);
 
 
-		//if ((lightweight_thread)*runqueue == NULL){
-		//	printf("** __NULL");
-		*runqueue = (lightweight_thread*) malloc (sizeof (lightweight_thread));
-		//	printf("** __AFTER NULL");
-		//}
-		**runqueue->thread_id = 99;
+		if ((runqueue) == NULL)
+		{
+			printf("** __NULL");
+			runqueue = (lightweight_thread**) malloc (sizeof (lightweight_thread));
+			printf("** __AFTER NULL");
+		}
+
+		//(**runqueue)->thread_id = 99;
 		__Runqueue_add(runqueue, thd_ptr);
 		//__lwt_trampoline_inline(thd_ptr->fn, thd_ptr->params);
 
@@ -155,20 +157,26 @@ volatile lwt_t current_thread;
 
 	int __Runqueue_add(lightweight_thread **list, lightweight_thread *thd_ptr){
 
-
-		lightweight_thread* t = *list;
-		lightweight_thread th = *t;
-		printf("** __Runqueue_add: %i\n", th.thread_id);
+		//printf("** __Runqueue_add: %i\n", th.thread_id);
 
 		lightweight_thread *new_node = (lightweight_thread*) malloc (sizeof (lightweight_thread));
 
 		new_node = thd_ptr;
-		new_node->next_thread = *list;
-		*list = new_node;
+		if (list != NULL){
+			new_node->next_thread = *list;
+		}
+
+		list = new_node;
 
 
 		//int t = *list->thread_id;
-		//printf("** __Runqueue_add: %i %i %i\n",new_node->thread_id, (int)th->thread_id);
+		printf("** __Runqueue_add: %i\n",new_node->thread_id);
+
+		if ((runqueue) != NULL)
+		{
+			//printf("** __Runqueue_add: %i %i\n",new_node->thread_id, (*runqueue)->next_thread );
+
+		}
 
 
 /*
