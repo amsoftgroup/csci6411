@@ -11,8 +11,9 @@ void __lwt_start_test0(void){
 	printf("__lwt_start_test0)\n");
 }
 
-void __lwt_start_test1(int old){
-	printf("__lwt_start_test1, %i)\n", old);
+void __lwt_start_test1(thd_params_t){
+	//params->a
+	//printf("__lwt_start_test1, %i)\n", params->a);
 }
 
 void __lwt_start_test2(int i, int j){

@@ -3,13 +3,11 @@
 #include <stdio.h>
 #include "linkedlist.h"
 #include "thread.h"
-
-
+#include "test.h"
 
 volatile int max_thread_id = 0;
-int sp = -1;
-int ip = -1;
-volatile lwt_t runqueue;
+
+volatile lwt_t *runqueue;
 volatile lwt_t waitqueue;
 volatile lwt_t current_thread;
 
@@ -21,13 +19,32 @@ volatile lwt_t current_thread;
 	lwt_t
 	lwt_create(lwt_fn_t fn, void *data)
 	{
-		lwt_t thd_ptr = (lightweight_thread_struct *) malloc(sizeof(lightweight_thread_struct));
-		printf("fn %p\n", fn);
-		thd_ptr->thread_id = max_thread_id++;
-		thd_ptr->fn = fn;
-		thd_ptr->state = ready;
-		__Runqueue_add(thd_ptr);
-		printf("in lwt_create: %p %i\n", fn, runqueue->thread_id);
+		lwt_t thd_ptr 		= (lightweight_thread *) malloc(sizeof(lightweight_thread));
+		void * stack		= malloc(4096);
+		thd_ptr->thread_id 	= max_thread_id++;
+		thd_ptr->fn 		= fn;
+		thd_ptr->state 		= ready;
+		thd_ptr->params 	= data;
+		thd_ptr->stack 		= stack;
+		thd_ptr->sp_init 	= stack - 4096;
+		thd_ptr->sp		 	= stack - 4096;
+		thd_ptr->ip			=__lwt_trampoline_inline;
+
+		printf("in lwt_create: stack=%i, %i\n", stack, thd_ptr->sp_init);
+
+
+		//if ((lightweight_thread)*runqueue == NULL){
+		//	printf("** __NULL");
+		*runqueue = (lightweight_thread*) malloc (sizeof (lightweight_thread));
+		//	printf("** __AFTER NULL");
+		//}
+		**runqueue->thread_id = 99;
+		__Runqueue_add(runqueue, thd_ptr);
+		//__lwt_trampoline_inline(thd_ptr->fn, thd_ptr->params);
+
+		//struct thd_params_t par = *(struct thd_params_t*)thd_ptr->params;
+		//printf("in lwt_create: fn loc:%p thd_id=%i param_data=%i\n", fn, runqueue->thread_id, par.a);
+
 		return thd_ptr;
 	}
 
@@ -46,19 +63,23 @@ volatile lwt_t current_thread;
 	int
 	lwt_yeild(lwt_t thread){
 
+		printf("** in yield threadid=%i\n", thread->thread_id);
+
 		if (thread == NULL){
-			printf("empty runqueue, do nothing");
+			printf("in yield with NULL parameter, pop waitqueue\n");
+			__lwt_schedule();
+			// pop waitqueue, add to runqueue or do nothing??????
 			return -1;
-		}else if (thread->prev_thread == NULL){
-			printf("only one thread in runqueue: not yeilding: id=%i\n",thread->thread_id );
-			return -1;
+		//}else if (thread->prev_thread == NULL){
+		//	printf("in yield with only one thread in runqueue: not yielding: id=%i\n",thread->thread_id );
+		//	return -1;
+		}else{
+			//printf("yielding=%i to %i\n",current_thread->thread_id , thread->thread_id);
+			__lwt_dispatch(thread, runqueue);
 		}
 
-		printf("yeilding thread id=%i\n",thread->thread_id );
+		printf("lwt_yeild to %i\n", thread->thread_id);
 
-		//thread->state = waiting;
-		//__Runqueue_remove(thread);
-		//__Waitqueue_add(thread);
 
 		return 1;
 	}
@@ -73,158 +94,94 @@ volatile lwt_t current_thread;
 	int
 	lwt_id(lwt_t thread)
 	{
-		lightweight_thread_struct t = *thread;
-		return t.thread_id;
+		//lightweight_thread_struct t = *thread;
+		return thread->thread_id;
 	}
 
 	void
 	__lwt_schedule(void)
 	{
-		// pop the next value off the runqueue!
-		lwt_t thread  = __Runqueue_pop();
-		__lwt_dispatch(thread, current_thread);
+/*
+		if (current_thread == NULL){
+			printf(" *** __lwt_schedule: current_thread == NULL\n");
+			// pop the next value off the runqueue!
+			lwt_t thread  = __Runqueue_pop();
+			printf(" *** __lwt_schedule: runq popped thread_id=%i\n", thread->thread_id);
+			__lwt_dispatch(thread, current_thread);
+		//}else if (next->state == waiting){
+		}else if (current_thread->next_thread != NULL){
+			printf(" *** __lwt_schedule: calling __lwt_dispatch\n");
+			__lwt_dispatch(current_thread->next_thread, current_thread);
+		}else{
+			// next thread is not ready, move to next->next?
+			// we shouldn't ever be here?
+			printf("unhandled __lwt_schedule: .id=%i", current_thread->thread_id);
+		}
+		*/
 	}
 
 	void
 	__lwt_dispatch(lwt_t next, lwt_t current)
 	{
+		/*
+		printf("__lwt_dispatch: removing %i from runqueue (%i)\n", current->thread_id, runqueue->thread_id);
 		__Runqueue_remove(current);
+		printf("__lwt_dispatch: runqueue = %i\n", runqueue->thread_id);
 		__Waitqueue_add(current);
 		__Waitqueue_remove(next);
 		__Runqueue_add(next);
 
-		printf("popping: id=%i and sending %i to trampoline\n",current->thread_id, next->thread_id );
-		__lwt_trampoline(next->fn, next);
+		printf("** __lwt_dispatch: popping id=%i and sending %i to trampoline\n",current->thread_id, next->thread_id );
+		__lwt_trampoline(next->fn, next->params);
 
 		current_thread = next;
-
+		*/
 	}
 
 	void
-	__lwt_start(void)
+	__lwt_trampoline_inline(void)
 	{
-		printf("hello world");
-		/* call function */
+		// call __lwt_start
+		__asm__("call __lwt_start\n\t");
 	}
 
-	int __Runqueue_add(lwt_t thd_ptr){
-
-		if (runqueue == NULL){
-			printf("## runqueue null inserting %i\n",thd_ptr->thread_id );
-			// create new runqueue: is empty
-			runqueue = thd_ptr;
-			printf("## runqueue is now %i\n",thd_ptr->thread_id );
-		}else{
-			printf("## runqueue inserting %i\n",thd_ptr->thread_id );
-			//add to head
-			thd_ptr->prev_thread = runqueue;
-			runqueue->next_thread = thd_ptr;
-			runqueue = thd_ptr;
-			printf("## runqueue is now  %i\n",runqueue->thread_id );
-		}
-		return thd_ptr->thread_id;
+	void
+	__lwt_start(lwt_fn_t fn, void *data)
+	{
+		printf("in __lwt_start()");
+	//	lwt_t t = lwt_current();
+	//	lwt_die(t->fn(t->params));
 	}
 
-	lwt_t __Runqueue_pop(){
-
-		// TODO: no need to handle NULL runqueue, we shouldn't end up here
-		// learn and use assert() in C
-
-		lwt_t ret_thread = runqueue;
-		lwt_t prev_thread = runqueue->prev_thread;
-		lwt_t prev_prev_thread = prev_thread->prev_thread;
-		prev_thread->next_thread = NULL;
-		prev_thread->prev_thread = prev_prev_thread;
-		runqueue = prev_thread;
-		return ret_thread;
-	}
+	int __Runqueue_add(lightweight_thread **list, lightweight_thread *thd_ptr){
 
 
-	int __Runqueue_remove(lwt_t thread){
+		lightweight_thread* t = *list;
+		lightweight_thread th = *t;
+		printf("** __Runqueue_add: %i\n", th.thread_id);
 
-		int found = 0;
-		lwt_t prev_thread = NULL;
-		lwt_t next_thread = NULL;
+		lightweight_thread *new_node = (lightweight_thread*) malloc (sizeof (lightweight_thread));
 
-		while (runqueue->prev_thread != NULL){
-			printf("runqueue %i\n",runqueue->thread_id );
-			//printf("thread_id %i\n",thread->thread_id );
+		new_node = thd_ptr;
+		new_node->next_thread = *list;
+		*list = new_node;
 
-			if (runqueue->thread_id == thread->thread_id){
 
-				printf("## thread %i = %i\n",runqueue->thread_id, thread->thread_id );
+		//int t = *list->thread_id;
+		//printf("** __Runqueue_add: %i %i %i\n",new_node->thread_id, (int)th->thread_id);
 
-				if (thread->prev_thread != NULL){
-					prev_thread = thread->prev_thread;
-					prev_thread->next_thread = thread->next_thread;
-				}
-				if (thread->next_thread != NULL){
-					next_thread = thread->next_thread;
-					next_thread->prev_thread = thread->prev_thread;
-				}
 
-				//printf("## before next_thread %i\n",next_thread->thread_id );
-				//printf("## before prev_thread %i\n",prev_thread->thread_id );
-
-				//prev_thread->next_thread = next_thread;
-				//next_thread->prev_thread = prev_thread;
-
-				//printf("##next_thread %i\n",next_thread->thread_id);
-				printf("##runqueue %i\n",runqueue->thread_id );
-				//printf("##thread removed %i\n",thread->thread_id );
-				//printf("##prev_thread %i\n",prev_thread->thread_id );
-				found = 1;
-			}
-			if (found){
-				break;
-			}else{
-				runqueue = runqueue->prev_thread;
-			}
-		}
-	}
-
-	int __Waitqueue_add(lwt_t thd_ptr){
-
-		if (waitqueue == NULL){
-			printf("## waitqueue null inserting %i\n",thd_ptr->thread_id );
-			// create new waitqueue: is empty
-			waitqueue = thd_ptr;
-			printf("## waitqueue is now %i\n",thd_ptr->thread_id );
-		}else{
-			printf("## waitqueue inserting %i\n",thd_ptr->thread_id );
-			//add to head
-			thd_ptr->prev_thread = waitqueue;
-			waitqueue->next_thread = thd_ptr;
-			waitqueue = thd_ptr;
-			printf("## waitqueue is now  %i\n",waitqueue->thread_id );
-		}
-		return thd_ptr->thread_id;
-	}
-
-	int __Waitqueue_remove(lwt_t thread){
-
-		while (waitqueue->prev_thread != NULL){
-			printf("runqueue %i\n",waitqueue->thread_id );
-			printf("thread_id %i\n",thread->thread_id );
-			if (waitqueue->thread_id == thread->thread_id){
-
-				lwt_t prev_thread = waitqueue->prev_thread;
-				printf("##prev_thread %i\n",prev_thread->thread_id );
-				lwt_t next_thread = waitqueue->next_thread;
-				printf("##next_thread %i\n",next_thread->thread_id );
-				prev_thread->next_thread = waitqueue->next_thread;
-				next_thread->prev_thread = waitqueue->prev_thread;
-				printf("FOUND thread %i\n",waitqueue->thread_id );
-
-			}
-			waitqueue = waitqueue->prev_thread;
+/*
+		void addFirst(struct node **list, int value){
+		    struct node *new_node = (struct node*) malloc (sizeof (struct node));
+		    new_node->value = value;
+		    new_node->next = *list;
+		    *list = new_node;
 		}
 
-		return 1;
+*/
+		return -1;
 	}
-
-
-
 
 
 

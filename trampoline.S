@@ -14,8 +14,7 @@ mov  %esp, %ebp
 	call *0x08(%ebp)
 
 /* restore our registers */
- mov %ebp, %esp
- pop %ebp
-
+mov %ebp, %esp
+pop %ebp
 
 

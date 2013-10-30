@@ -9,6 +9,7 @@
 #define THREAD_
 
 #define LWT_NULL = (struct thread *)0
+#define TCB_SZ = 4096
 
 typedef void *(*lwt_fn_t)(void *);
 
@@ -24,29 +25,38 @@ typedef struct {
 	int thread_id;
 	int parent_id;
 	state_t state;
-	struct lightweight_thread_struct *next_thread;
-	struct lightweight_thread_struct *prev_thread;
+	struct lightweight_thread *next_thread;
+	struct lightweight_thread *prev_thread;
 	int size;
+
 	lwt_fn_t fn;
 	void *params;
-} lightweight_thread_struct;
 
-typedef lightweight_thread_struct* lwt_t;
+	void *stack;
+	unsigned int sp_init;
+	unsigned int sp;
+	unsigned int ip;
 
+} lightweight_thread ;
 
+typedef lightweight_thread *lwt_t;
 
 lwt_t lwt_create(lwt_fn_t fn, void *data);
-//lwt_t lwt_create(void);
 void *lwt_join(lwt_t);
 void lwt_die(void *);
 int lwt_yeild(lwt_t);
 lwt_t lwt_current(void);
 int lwt_id(lwt_t);
 
-int __Runqueue_add(lwt_t);
-int __Runqueue_remove(lwt_t);
-lwt_t __Runqueue_pop(void);
-int __Waitqueue_add(lwt_t);
-int __Waitqueue_remove(lwt_t);
+void __lwt_schedule(void);
+void __lwt_dispatch(lwt_t, lwt_t );
+void __lwt_trampoline_inline(void);
+
+
+int __Runqueue_add(lightweight_thread **a, lightweight_thread *b);
+//int __Runqueue_remove(lwt_t);
+//lwt_t __Runqueue_pop(void);
+//int __Waitqueue_add(lwt_t);
+//int __Waitqueue_remove(lwt_t);
 
 #endif /* THREAD_ */

@@ -17,9 +17,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+struct thd_params_t {
+	int a;
+	int b;
+} thd_params_t;
+
 void __lwt_start_test0(void);
 
-void __lwt_start_test1(int i);
+void __lwt_start_test1(struct thd_params_t params);
 
 void __lwt_start_test2(int i, int j);
 
