@@ -5,11 +5,14 @@
  *      Author: bnr@gwu.edu
  */
 
+
+
 #ifndef THREAD_
 #define THREAD_
 
-#define LWT_NULL = (struct thread *)0
+#define LWT_NULL ((lightweight_thread*)0)
 #define TCB_SZ = 4096
+
 
 typedef void *(*lwt_fn_t)(void *);
 
@@ -41,6 +44,8 @@ typedef struct {
 
 typedef lightweight_thread *lwt_t;
 
+
+
 lwt_t lwt_create(lwt_fn_t fn, void *data);
 void *lwt_join(lwt_t);
 void lwt_die(void *);
@@ -55,7 +60,7 @@ void __lwt_trampoline_inline(void);
 
 int __Runqueue_add(lightweight_thread **a, lightweight_thread *b);
 //int __Runqueue_remove(lwt_t);
-//lwt_t __Runqueue_pop(void);
+lightweight_thread* __Runqueue_pop(lightweight_thread **Head);
 //int __Waitqueue_add(lwt_t);
 //int __Waitqueue_remove(lwt_t);
 

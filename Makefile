@@ -1,4 +1,4 @@
-OBJS=main.o trampoline.S trampoline_test.S thread.o  scheduler.o test.o
+OBJS=main.o dispatcher.S trampoline.S trampoline_test.S thread.o  scheduler.o test.o
 CFLAGS=-g -I. -Wall -Wextra -lpthread -ggdb3 #-masm=intel
 #DEFINES=-DTHINK_TIME
 BIN=hw2
