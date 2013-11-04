@@ -29,16 +29,14 @@ typedef struct {
 	int parent_id;
 	state_t state;
 	struct lightweight_thread *next_thread;
-	struct lightweight_thread *prev_thread;
+	//struct lightweight_thread *prev_thread;
 	int size;
-
 	lwt_fn_t fn;
 	void *params;
-
 	void *stack;
-	unsigned int sp_init;
-	unsigned int sp;
-	unsigned int ip;
+	int sp_init;
+	int  sp;
+	int  ip;
 
 } lightweight_thread ;
 
@@ -49,16 +47,16 @@ typedef lightweight_thread *lwt_t;
 lwt_t lwt_create(lwt_fn_t fn, void *data);
 void *lwt_join(lwt_t);
 void lwt_die(void *);
-int lwt_yeild(lwt_t);
+double lwt_yield(lwt_t);
 lwt_t lwt_current(void);
-int lwt_id(lwt_t);
+double lwt_id(lwt_t);
 
 void __lwt_schedule(void);
 void __lwt_dispatch(lwt_t, lwt_t );
 void __lwt_trampoline_inline(void);
 
 
-int __Runqueue_add(lightweight_thread **a, lightweight_thread *b);
+double __Runqueue_add(lightweight_thread **a, lightweight_thread *b);
 //int __Runqueue_remove(lwt_t);
 lightweight_thread* __Runqueue_pop(lightweight_thread **Head);
 //int __Waitqueue_add(lwt_t);

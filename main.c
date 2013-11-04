@@ -17,18 +17,20 @@ main(int argc, char **argv)
 		args->a = 42;
 		args->b = 0xDEADBEEF;
 
+		//lwt_yield(LWT_NULL);
 		lwt_t new_thread_0 = lwt_create(__lwt_start_test1, args);
-		lwt_yeild(LWT_NULL);
+		//lwt_yield(LWT_NULL);
 		lwt_t new_thread_1 = lwt_create(__lwt_start_test1, args);
-		lwt_yeild(LWT_NULL);
-		lwt_yeild(LWT_NULL);
-		lwt_yeild(LWT_NULL);
+		lwt_yield(LWT_NULL);
+		//lwt_yield(LWT_NULL);
+		//lwt_yield(LWT_NULL);
 		lwt_t new_thread_2 = lwt_create(__lwt_start_test1, args);
+		lwt_yield(new_thread_1);
 		lwt_t new_thread_3 = lwt_create(__lwt_start_test1, args);
 		lwt_t new_thread_4 = lwt_create(__lwt_start_test1, args);
-		lwt_yeild(LWT_NULL);
+		lwt_yield(LWT_NULL);
 		//lwt_yeild(LWT_NULL);
-		lwt_yeild(new_thread_1);
+		//lwt_yield(new_thread_1);
 	//);
 
 	return 0;

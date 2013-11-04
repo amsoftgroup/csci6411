@@ -13,21 +13,21 @@ void __lwt_start_test0(void){
 
 void __lwt_start_test1(thd_params_t){
 	//params->a
-	//printf("__lwt_start_test1, %i)\n", params->a);
+	//printf("__lwt_start_test1, %.0lf)\n", params->a);
 }
 
-void __lwt_start_test2(int i, int j){
+void __lwt_start_test2(double i, double j){
 	printf("__lwt_start_test, %i %i)\n", i,j);
 }
 
-void __lwt_start_test3(int i, int j, int k){
-	printf("__lwt_start_test, %i %i %i)\n", i,j,k);
+void __lwt_start_test3(double i, double j, double k){
+	printf("*** __lwt_start_test,%i %i %i)\n", i,j,k);
 }
 
-void __lwt_start_test4(int i, int j, int k, int l){
-	printf("__lwt_start_test, %i %i %i %i)\n", i,j,k,l);
+void __lwt_start_test4(double i, double j, double k, double l){
+	printf("__lwt_start_test,%i %i %i %i)\n", i,j,k,l);
 }
 
-void __lwt_start_test5(int i, int j, int k, int l, int m){
+void __lwt_start_test5(double i, double j, double k, double l, double m){
 	printf("__lwt_start_test5: %i %i %i %i %i\n", i, j, k, l, m);
 }
