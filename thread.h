@@ -37,6 +37,7 @@ typedef struct {
 	int sp_init;
 	int  sp;
 	int  ip;
+	void *retval;
 
 } lightweight_thread ;
 

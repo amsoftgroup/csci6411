@@ -50,15 +50,19 @@ volatile lwt_t current_thread;
 		return thd_ptr;
 	}
 
-	void
-	*lwt_join(lwt_t thread)
+	void *
+	lwt_join(lwt_t thread)
 	{
-		// free the stack of the dieing thread here
+		while (thread->state != done){
+
+		}
+		return thread->retval;
 	}
 
 	void
-	lwt_die(void * thread)
+	lwt_die(void *)
 	{
+		current_thread->
 
 	}
 
