@@ -7,13 +7,44 @@ dispatcher:
 push %ebp
 mov  %esp, %ebp
 
+//	push %eax, %esp
+//	push %ebx, %esp
+mov $1, %ecx
+mov $2, %esi
+	pushal
+//	call __lwt_start_test2
+
+//	push 0x08(%ebp)
+//	push 0x0C(%ebp)
+	call __lwt_start_test2
+//	pop %esp
+//	pop %esp
+
+	//call __lwt_start_test2
+
+
+
+/*
+formula for doing all of this:
+- you need the sp and the ip you want to switch to (can pass as arguments)
+- you need teh address of the sp and ip you are switching away from so that you can save those to the proper locations
+- within the assembly, you are worried about 1) reading and writing those values, which you can test by making this function "normal" (no switching), and 2) saving and restoring the "proper" values.
+- you can add saving and restoring logic for normal registers before adding switching
+- At this point, you have saving + restoring, you have access to the appropriate memory values for ip and sp, now all you need to do is add the saving and restoring of the proper values.
+- what IP are you saving into the previous task
+	save ip by: movl $1f, (%theregisterpointingtoip)
+	movl %esp, (%theregisterpointingtosp)
+	movl %registerholdingnextthreadsp, %esp
+	jmp %registerholdingnextthdip
+	1: asm to return to here
+*/
 
 // use these two registers to store next and current TCB
 //push %eax
 //push %ebx
 
-	movl 0x08(%ebp), %eax // CURRENT, 2nd param stack address
-	movl 0x0C(%ebp), %ebx // NEXT, 1st param stack address
+//	movl 0x08(%ebp), %eax // CURRENT, 2nd param stack address
+//	movl 0x0C(%ebp), %ebx // NEXT, 1st param stack address
 /*
 //uncomment to show proper mem locations are passed in
 	push 0x08(%ebp)
@@ -33,6 +64,7 @@ mov  %esp, %ebp
 
 // movl current registers to 1st parameter location [0x08(%ebp)]
 // 32 bit registers
+/*
 	movl %eax, 0x08(%eax)
 
 	push 0x08(%eax) 		// testing
@@ -51,9 +83,9 @@ mov  %esp, %ebp
 	mov %es,  0x24(%eax)
 	mov %fs,  0x26(%eax)
 	mov %gs,  0x28(%eax)
-
+*/
 // mov next thread's registers from 2nd parameter location [0x0C(%ebp)]
-
+/*
 	//movl 0x08(%ebx), %eax
 
 	push 0x08(%ebx)
@@ -62,7 +94,7 @@ mov  %esp, %ebp
 
 	movl 0x0C(%ebx), %ebx
 	movl 0x10(%ebx), %ecx
-
+*/
 
 	//movl 0x14(%ebx), %edx
 	//movl 0x18(%ebx), %esi

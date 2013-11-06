@@ -29,7 +29,6 @@ typedef struct {
 	int parent_id;
 	state_t state;
 	struct lightweight_thread *next_thread;
-	//struct lightweight_thread *prev_thread;
 	int size;
 	lwt_fn_t fn;
 	void *params;
@@ -42,7 +41,6 @@ typedef struct {
 } lightweight_thread ;
 
 typedef lightweight_thread *lwt_t;
-
 
 
 lwt_t lwt_create(lwt_fn_t fn, void *data);
@@ -60,7 +58,6 @@ void __lwt_trampoline_inline(void);
 double __Runqueue_add(lightweight_thread **a, lightweight_thread *b);
 //int __Runqueue_remove(lwt_t);
 lightweight_thread* __Runqueue_pop(lightweight_thread **Head);
-//int __Waitqueue_add(lwt_t);
-//int __Waitqueue_remove(lwt_t);
+
 
 #endif /* THREAD_ */

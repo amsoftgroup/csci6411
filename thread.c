@@ -1,14 +1,12 @@
 
 #include <stdlib.h>
 #include <stdio.h>
-#include "linkedlist.h"
 #include "thread.h"
 #include "test.h"
 
 volatile int max_thread_id = 0;
 
 volatile lwt_t *runqueue;
-//volatile lwt_t waitqueue;
 volatile lwt_t current_thread;
 
 /**
@@ -20,29 +18,26 @@ volatile lwt_t current_thread;
 	lwt_create(lwt_fn_t fn, void *data)
 	{
 
+		// what is the current C thread?
 		lwt_t thd_ptr 		= (lightweight_thread *) malloc(sizeof(lightweight_thread));
-		void *stack_ptr	= malloc(4096);
-		//printf("lwt_create: malloc %p\n", stack);
-		//double *stack 		= (double *) stack_ptr;
+		unsigned int *stack_ptr	= malloc(4096);//unsigned int
 		thd_ptr->thread_id 	= max_thread_id++;
 		thd_ptr->fn 		= fn;
 		thd_ptr->state 		= ready;
 		thd_ptr->params 	= data;
-		thd_ptr->stack 		= stack_ptr;
 		thd_ptr->sp_init 	= stack_ptr;
-		thd_ptr->sp		 	= stack_ptr;
+		thd_ptr->sp		 	= stack_ptr + 4096/sizeof(unsigned int); //or &stack_ptr[4096/sizeof(unsigned int)]
 		thd_ptr->ip			= __lwt_trampoline_inline;
-		//void * fp_ptr 		= __lwt_trampoline_inline;
-		//thd_ptr->ip			= (double) *fp_ptr;
 
 		printf("in lwt_create: stack=%p, %i\n", stack_ptr, thd_ptr->sp_init);
 
 		if ((runqueue) == NULL)
 		{
+			// initialize me more please!!! state and thread id at least
 			printf("lwt_create: runqueue is NULL\n");
 			runqueue = (lightweight_thread**) malloc (sizeof (lightweight_thread));
 			printf("lwt_create __AFTER NULL\n");
-			current_thread = thd_ptr;
+			current_thread = thd_ptr; //should probably be the "main" thread as that is currently executing!!
 		}
 
 		__Runqueue_add(runqueue, thd_ptr);
@@ -53,16 +48,17 @@ volatile lwt_t current_thread;
 	void *
 	lwt_join(lwt_t thread)
 	{
-		while (thread->state != done){
-
-		}
-		return thread->retval;
+		// get all child threads of thread
+		// while (child thread->state != done){
+			//wait
+		//}
+		// return parent_thread->retval;
 	}
 
 	void
-	lwt_die(void *)
+	lwt_die(void *ptr)
 	{
-		current_thread->
+//		current_thread->
 
 	}
 
@@ -72,7 +68,7 @@ volatile lwt_t current_thread;
 		if (thread){
 			printf("lwt_yield: runqueue(%i) yielding to (%i)\n", (current_thread)->thread_id, thread->thread_id);
 			if (runqueue){
-				printf("lwt_yield: !runqueue calling dispatch thread_TCB=%p, current_thread_TCB = %p\n", thread->stack, (*runqueue)->stack);
+				printf("lwt_yield: !runqueue calling dispatch thread_TCB=%p, current_thread_TCB = %p\n", thread->sp, (*runqueue)->sp);
 				__lwt_dispatch(thread, *runqueue);
 			}
 		}else{
@@ -100,10 +96,10 @@ volatile lwt_t current_thread;
 	{
 		lightweight_thread *thread = __Runqueue_pop(runqueue);
 		printf("__lwt_schedule: popped %i\n", thread->thread_id);
-		printf("__lwt_schedule: thread TCB address %i (%p)\n", thread->stack, thread->stack);
+		printf("__lwt_schedule: thread TCB address %i (%p)\n", thread->sp, thread->sp);
 		//printf("__lwt_schedule: runqueue %i\n", (*runqueue)->thread_id);
 		//printf("__lwt_schedule: current_thread %i\n", (current_thread)->thread_id);
-
+		//assert(current_thread);
 		if (current_thread){
 			printf("__lwt_schedule: calling __lwt_schedule, current is %i\n", current_thread->thread_id);
 			__lwt_dispatch(thread, current_thread);
@@ -123,8 +119,8 @@ volatile lwt_t current_thread;
 
 		if (current){
 			printf("__lwt_dispatch: calling dipatch.S, current thread id is %i, next %i\n", current->thread_id, next->thread_id);
-			printf("__lwt_dispatch: calling dipatch.S, current TCB is %p, next %p\n", current->stack, next->stack);
-			dispatcher(next->stack, current->stack);
+			printf("__lwt_dispatch: calling dipatch.S, current TCB is %p, next %p\n", current->sp, next->sp);
+			dispatcher(next->sp, current->sp);
 		}else{
 			printf("__lwt_dispatch: no thread executing. skipping dispatch.\n");
 		}
@@ -171,7 +167,6 @@ volatile lwt_t current_thread;
 		new_node->size = thd_ptr->size; // //TODO: needed????
 		new_node->sp = thd_ptr->sp;
 		new_node->sp_init = thd_ptr->sp_init;
-		new_node->stack = thd_ptr->stack;
 		new_node->state = thd_ptr->state;
 
 		*list = new_node;
