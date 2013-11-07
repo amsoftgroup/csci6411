@@ -18,7 +18,7 @@ volatile lwt_t current_thread;
 	lwt_create(lwt_fn_t fn, void *data)
 	{
 
-		// what is the current C thread?
+		// The current C thread?
 		lwt_t thd_ptr 		= (lightweight_thread *) malloc(sizeof(lightweight_thread));
 		unsigned int *stack_ptr	= malloc(4096);//unsigned int
 		thd_ptr->thread_id 	= max_thread_id++;
@@ -33,6 +33,8 @@ volatile lwt_t current_thread;
 
 		if ((runqueue) == NULL)
 		{
+
+
 			// initialize me more please!!! state and thread id at least
 			printf("lwt_create: runqueue is NULL\n");
 			runqueue = (lightweight_thread**) malloc (sizeof (lightweight_thread));
