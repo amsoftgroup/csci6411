@@ -8,26 +8,26 @@
 #include <stdio.h>
 
 void __lwt_start_test0(void){
-	printf("__lwt_start_test0)\n");
+	printf("*******__lwt_start_test0)\n");
 }
 
-void __lwt_start_test1(thd_params_t){
+void __lwt_start_test1(unsigned int i){
 	//params->a
-	//printf("__lwt_start_test1, %.0lf)\n", params->a);
+	printf("*******__lwt_start_test1, executed thread %i)\n", i);
 }
 
-void __lwt_start_test2(double i, double j){
+void __lwt_start_test2(unsigned int i, unsigned int j){
 	printf("__lwt_start_test, %i %i)\n", i,j);
 }
 
-void __lwt_start_test3(double i, double j, double k){
+void __lwt_start_test3(unsigned int i, unsigned int j, unsigned int k){
 	printf("*** __lwt_start_test,%i %i %i)\n", i,j,k);
 }
 
-void __lwt_start_test4(double i, double j, double k, double l){
+void __lwt_start_test4(unsigned int i, unsigned int j, unsigned int k, unsigned int l){
 	printf("__lwt_start_test,%i %i %i %i)\n", i,j,k,l);
 }
 
-void __lwt_start_test5(double i, double j, double k, double l, double m){
+void __lwt_start_test5(unsigned int i, unsigned int j, unsigned int k, unsigned int l, unsigned int m){
 	printf("__lwt_start_test5: %i %i %i %i %i\n", i, j, k, l, m);
 }

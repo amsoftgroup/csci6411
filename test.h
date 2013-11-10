@@ -24,15 +24,15 @@ struct thd_params_t {
 
 void __lwt_start_test0(void);
 
-void __lwt_start_test1(struct thd_params_t params);
+void __lwt_start_test1(unsigned int i);
 
-void __lwt_start_test2(int i, int j);
+void __lwt_start_test2(unsigned int i, unsigned int j);
 
-void __lwt_start_test3(int i, int j, int k);
+void __lwt_start_test3(unsigned int i, unsigned int j, unsigned int k);
 
-void __lwt_start_test4(int i, int j, int k, int l);
+void __lwt_start_test4(unsigned int i, unsigned int j, unsigned int k, unsigned int l);
 
-void __lwt_start_test5(int i, int j, int k, int l, int m);
+void __lwt_start_test5(unsigned int i, unsigned int j, unsigned int k, unsigned int l, unsigned int m);
 
 
 #endif /* TEST_H_ */
