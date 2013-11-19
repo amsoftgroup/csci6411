@@ -172,7 +172,21 @@ volatile lwt_t current_thread;
 		//		"call __lwt_start_test1\n\t");
 		//__asm__("push (%esp)\n\t"); // return address
 
-		__asm__("call __lwt_start\n\t");
+/*
+ *    asm ("movl %1, %%eax;"
+         "movl %%eax, %0;"
+         :"=r"(x) // x is output operand and it's related to %0
+         :"r"(11)  // 11 is input operand and it's related to %1
+         :"%eax"); // %eax is clobbered register
+ */
+		asm volatile("push %0\n\t"
+					 "push %1\n\t"
+		         	 "call __lwt_start\n\t"
+						: // x is output operand and it's related to %0
+						:"r"(current_thread->fn), "r" (current_thread->params)  // 11 is input operand and it's related to %1
+						:"%eax"); // %eax is clobbered register
+
+		//__asm__("call __lwt_start\n\t");
 		//		"ret\n\t");
 	}
 
@@ -180,8 +194,8 @@ volatile lwt_t current_thread;
 	__lwt_start(lwt_fn_t fn, void *data)
 	{
 		printf("__lwt_start(): entered");
-		//lwt_t t = lwt_current();
-		//lwt_die(t->fn(t->params));
+		lwt_t t = lwt_current();
+		lwt_die(t->fn(t->params));
 
 	}
 

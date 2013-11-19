@@ -25,10 +25,9 @@ dispatcher:
 */
 
 //  called by dispatcher(next->sp, next->ip, ptr_current_sp, ptr_current_ip);
-//push %ebp
-//mov  %esp, %ebp
 
 	pushal
+
 	// pushal adds 32 bytes to ESP.
 	// add 0x20 to all stack vals (first param, 0x04 becomes 0x24, etc.)
 
@@ -36,10 +35,10 @@ dispatcher:
 	// save off current IP as a label to return to
 	movl $1f, (%ecx)
 
-
 	movl 0x2C(%esp), %edx // 	current sp (address of)
 	// save current SP to current thread
 	movl %esp, (%edx)
+
 
 	// *	reuse %ecx, %edx (previously current address to ip & sp) to store
 	// next ip & sp. commenting out these next two lines and dereferncing the
@@ -48,17 +47,15 @@ dispatcher:
 	// *	uncommenting the next two lines  should be proper thread context
 	// switching.
 
-	movl 0x28(%esp), %ecx // next ip
-	movl 0x24(%esp), %edx // next sp
+	//movl 0x28(%esp), %ecx // next ip
+	//movl 0x24(%esp), %edx // next sp
+
 
 	//move next SP to SP
-	movl %edx, %esp
-
-//mov %ebp, %esp
-//pop %esp
+	movl (%edx), %esp
 
 	//jump to next ip
-	jmp %ecx
+	jmp (%ecx)
 
 
 	1:popal
