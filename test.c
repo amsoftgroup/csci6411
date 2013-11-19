@@ -13,7 +13,7 @@ void __lwt_start_test0(void){
 
 void __lwt_start_test1(unsigned int i){
 	//params->a
-	printf("*******__lwt_start_test1, executed thread %i)\n", i);
+	printf("*******__lwt_start_test1 %i)\n", i);
 }
 
 void __lwt_start_test2(unsigned int i, unsigned int j){
