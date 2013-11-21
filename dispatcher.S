@@ -25,19 +25,32 @@ dispatcher:
 */
 
 //  called by dispatcher(next->sp, next->ip, ptr_current_sp, ptr_current_ip);
+//call __lwt_start_test0
+	push %ebp
+	mov %esp, %ebp
 
 	pushal
 
-	// pushal adds 32 bytes to ESP.
-	// add 0x20 to all stack vals (first param, 0x04 becomes 0x24, etc.)
+	movl 0x14(%ebp), %eax // ptr current IP
+	movl 0x10(%ebp), %ebx // ptr current SP
+	movl 0x0C(%ebp), %ecx //NEXT IP
+	movl 0x08(%ebp), %edx //NEXT SP
 
-	movl 0x30(%esp), %ecx // 	current ip (address of)
-	// save off current IP as a label to return to
-	movl $1f, (%ecx)
+	movl $1f,  (%eax)
+ 	movl %ebp, (%ebx)
+ 	movl %edx, %ebp
+ 	jmp  %ecx
 
-	movl 0x2C(%esp), %edx // 	current sp (address of)
+	1: 	popal
+	 	leave
+		ret
+
+/*
+	movl 0x10(%ebp), %edx // 	current sp (address of)
 	// save current SP to current thread
 	movl %esp, (%edx)
+
+
 
 
 	// *	reuse %ecx, %edx (previously current address to ip & sp) to store
@@ -47,10 +60,15 @@ dispatcher:
 	// *	uncommenting the next two lines  should be proper thread context
 	// switching.
 
-	//movl 0x28(%esp), %ecx // next ip
-	//movl 0x24(%esp), %edx // next sp
+	//movl 0x0C(%ebp), %ecx // next ip
+	//movl 0x08(%ebp), %edx // next sp
 
-
+/*
+	pushl %edx
+	call __lwt_start_test1
+	addl $0x04, %ebp
+*/
+/*
 	//move next SP to SP
 	movl (%edx), %esp
 
@@ -59,17 +77,34 @@ dispatcher:
 
 
 	1:popal
+	  mov %ebp, %esp
+      pop %esp
 	  ret
 
 
 
-
-//		mov %ebp, %esp
-//		pop %esp
-
+*/
+/*
+get_eip:
+	movl (%esp), %eax
+	ret
+*/
 /*
 	pushl %eax
 	call __lwt_start_test1
 	addl $0x04, %esp
 */
 
+/*
+	//parameter test
+	pushl $0x01
+	pushl %ebp
+	pushl (%ebp)
+	pushl %edx
+	pushl (%edx) // < this one
+	pushl %ecx
+	pushl (%ecx)
+	call __lwt_start_test7
+	addl $0x18, %esp
+	//parameter testt
+	*/

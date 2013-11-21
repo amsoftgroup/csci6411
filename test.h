@@ -34,5 +34,7 @@ void __lwt_start_test4(unsigned int i, unsigned int j, unsigned int k, unsigned 
 
 void __lwt_start_test5(unsigned int i, unsigned int j, unsigned int k, unsigned int l, unsigned int m);
 
+void __lwt_start_test6(unsigned int i, unsigned int j, unsigned int k, unsigned int l, unsigned int m, unsigned int n);
 
+void __lwt_start_test7(unsigned int i, unsigned int j, unsigned int k, unsigned int l, unsigned int m, unsigned int n, unsigned int o);
 #endif /* TEST_H_ */
