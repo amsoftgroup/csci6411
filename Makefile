@@ -1,5 +1,5 @@
 OBJS=main.o dispatcher.S thread.o test.o
-CFLAGS=-g -I. -Wall -Wextra -lpthread -ggdb3 #-masm=intel 
+CFLAGS=-g -I. -Wall -Wextra -lpthread -ggdb3 -m32#-masm=intel 
 #DEFINES=-DTHINK_TIME
 BIN=hw2
 CC=gcc

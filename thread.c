@@ -132,26 +132,25 @@ volatile lwt_t current_thread;
 	__lwt_dispatch(lwt_t next, lwt_t current)
 	{
 
-		printf("__lwt_dispatch: before \n");// current_thread %i\n",current_thread->thread_id);
+		printf("__lwt_dispatch: \n");// current_thread %i\n",current_thread->thread_id);
 
 		if (current){
 
-			//printf("__lwt_dispatch:\n	current_thread.SP=	%i\n	current_thread.IP=	%i\n", current_thread->sp, current_thread->ip);
-			printf("__lwt_dispatch:\n	next.SP=	%p\n	next.IP=	%p\n	current.SP=	%p\n	current.IP=	%p\n", next->sp, next->ip, current->sp, current->ip);
+			printf("__lwt_dispatch:\n	next.SP=	%i\n	next.IP=	%i\n	current.SP=	%i\n	current.IP=	%i\n", next->sp, next->ip, current->sp, current->ip);
 
 			unsigned int *ptr_sp = &(current->sp);
 			unsigned int *ptr_ip = &(current->ip);
 
+			//printf("__lwt_dispatch: calling dipatch.S, current SP_ptr is %i, ptr_ip %i", ptr_sp, ptr_ip);
+			//printf("__lwt_dispatch: calling dipatch.S, current SP_ptr is %i, ptr_ip %i, *ptr_sp %i, *ptr_ip %i", ptr_sp, ptr_ip, *ptr_sp, *ptr_ip);
 
-			printf("__lwt_dispatch: calling dipatch.S, current SP_ptr is %p, ptr_ip %p\n", ptr_sp, ptr_ip);
+			dispatcher(next->sp, next->ip, current->sp, ptr_ip);
 
-			dispatcher(next->sp, next->ip, ptr_sp, ptr_ip);
-
-			printf("__lwt_dispatch: calling dipatch.S, current SP_ptr is %p, ptr_ip %p\n", ptr_sp, ptr_ip);
-
+			//printf("__lwt_dispatch: calling dipatch.S, current SP_ptr is %i, ptr_ip %i, *ptr_sp %i, *ptr_ip %i", ptr_sp, ptr_ip, *ptr_sp, *ptr_ip);
+			//printf("__lwt_dispatch: calling dipatch.S, current SP_ptr is %i, ptr_ip %i", ptr_sp, ptr_ip);
 
 			//__lwt_start_test4(next->sp, next->ip, current->sp, current->ip);
-			printf("__lwt_dispatch:\n	next.SP=	%p\n	next.IP=	%p\n	current.SP=	%p\n	current.IP=	%p\n", next->sp, next->ip, current->sp, current->ip);
+			printf("__lwt_dispatch:\n	next.SP=	%i\n	next.IP=	%i\n	current.SP=	%i\n	current.IP=	%i\n", next->sp, next->ip, current->sp, current->ip);
 
 
 
@@ -170,6 +169,25 @@ volatile lwt_t current_thread;
 		//printf("__lwt_dispatch: after current_thread %i\n",current_thread->thread_id);
 	}
 
+	/*
+	void
+	inline_dispatcher(unsigned int next_sp, unsigned int next_ip, unsigned int ptr_sp, unsigned int ptr_ip)
+	{
+
+		asm volatile("push %ebp\n\t"
+					 "mov %esp, %ebp\n\t"
+					 "pushal\n\t"
+					 "movl 0x14(%ebp), %ecx \n\t"
+					 "movl 0x10(%ebp), %edx \n\t"
+					 "movl $1f,  (%ecx)\n\t"
+					 "movl %ebp, (%edx)\n\t"
+					 "movl (%edx), %ebp\n\t"
+					 "jmp  (%ecx)\n\t"
+					 "1: 	popal\n\t"
+					 " 	leave\n\t"
+					 "	ret\n\t");
+	}
+*/
 	void
 	__lwt_trampoline_inline()
 	{

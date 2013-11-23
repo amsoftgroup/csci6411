@@ -25,25 +25,41 @@ dispatcher:
 */
 
 //  called by dispatcher(next->sp, next->ip, ptr_current_sp, ptr_current_ip);
-//call __lwt_start_test0
+
 	push %ebp
 	mov %esp, %ebp
 
 	pushal
 
-	movl 0x14(%ebp), %eax // ptr current IP
-	movl 0x10(%ebp), %ebx // ptr current SP
-	movl 0x0C(%ebp), %ecx //NEXT IP
-	movl 0x08(%ebp), %edx //NEXT SP
+// moves value of EIP to EAX
+	call get_eip
 
-	movl $1f,  (%eax)
- 	movl %ebp, (%ebx)
- 	movl %edx, %ebp
- 	jmp  %ecx
+	//mov %eax, %ecx
+	//movl 0x14(%ebp), %ecx // ptr current IP
+	movl 0x10(%ebp), %edx // ptr current SP
+//	movl (%eax), %ecx
 
-	1: 	popal
-	 	leave
-		ret
+//	call
+
+//
+	//movl $1f,  (%ecx)
+	movl $1f, %eax
+ 	movl %ebp, (%edx)
+
+ //	movl 0x0C(%ebp), %ecx //NEXT IP
+//	movl 0x08(%ebp), %edx //NEXT SP
+
+ 	movl (%edx), %ebp
+ 	jmp  %eax
+
+1:
+	popal
+	leave
+	ret
+
+get_eip:
+	movl (%esp), %eax
+	ret
 
 /*
 	movl 0x10(%ebp), %edx // 	current sp (address of)
