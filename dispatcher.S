@@ -28,44 +28,46 @@ dispatcher:
 
 	push %ebp
 	mov %esp, %ebp
-
+    //sub $0x20,%esp // room for local variables
 	pushal
 
-// moves value of EIP to EAX
-	call get_eip
 
-	//mov %eax, %ecx
-	//movl 0x14(%ebp), %ecx // ptr current IP
-	movl 0x10(%ebp), %edx // ptr current SP
-//	movl (%eax), %ecx
+	movl 0x14(%ebp), %ecx 	// get ptr_to_current_ip from parameter list
+	movl 0x10(%ebp), %edx 	// ptr current SP
 
-//	call
+	movl $1f, (%ecx)
+ 	movl %esp, (%edx)
 
-//
-	//movl $1f,  (%ecx)
-	movl $1f, %eax
- 	movl %ebp, (%edx)
+ 	movl 0x0C(%ebp), %ecx //NEXT IP
+    movl 0x08(%ebp), %edx //NEXT SP
 
- //	movl 0x0C(%ebp), %ecx //NEXT IP
-//	movl 0x08(%ebp), %edx //NEXT SP
-
- 	movl (%edx), %ebp
- 	jmp  %eax
+ 	movl %edx, %esp
+ 	jmp  %ecx
 
 1:
 	popal
-	leave
+	movl %ebp, %esp
+	pop %ebp
 	ret
 
-get_eip:
-	movl (%esp), %eax
-	ret
+
+.globl tramp_testing
+tramp_testing:
+	push
+	call __lwt_call_test1
+
+.globl tramp_testing_params
+tramp_testing_params:
+	push %ebp
+	mov %esp, %ebp
+	push 0x08(%ebp)
+	call __lwt_call_params
+
 
 /*
 	movl 0x10(%ebp), %edx // 	current sp (address of)
 	// save current SP to current thread
 	movl %esp, (%edx)
-
 
 
 

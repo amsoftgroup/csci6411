@@ -22,6 +22,8 @@ struct thd_params_t {
 	int b;
 } thd_params_t;
 
+void __lwt_call_test1(struct thd_params_t *args_in);
+
 void __lwt_start_test0(void);
 
 void __lwt_start_test1(unsigned int i);

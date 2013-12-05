@@ -4,7 +4,7 @@
 #include "thread.h"
 #include "test.h"
 
-volatile int max_thread_id = 0;
+volatile int max_thread_id = 1;
 
 volatile lwt_t *runqueue;
 volatile lwt_t current_thread;
@@ -17,7 +17,9 @@ volatile lwt_t current_thread;
 	lwt_t
 	lwt_create(lwt_fn_t fn, void *data)
 	{
-		// if current_thread is null, runqueue has to be based on how we assign runqueue
+		void tramp_testing(void);
+
+		// if current_thread is null, we haven't added the main C thread
 		if ((current_thread) == NULL)
 		{
 			// there should always be at least 1 thread in the runqueue: the originating C thread
@@ -30,11 +32,12 @@ volatile lwt_t current_thread;
 			c_thread->thread_id = 0; // zero will uniquely define the initial C thread.. the parent of all possible threads
 			c_thread->state		= running;
 			c_thread->sp_init 	= stack_ptr;
-			c_thread->sp		= stack_ptr + 4096/sizeof(unsigned int); //or &stack_ptr[4096/sizeof(unsigned int)]
-			c_thread->ip		= __lwt_trampoline_inline;
+			//c_thread->sp		= stack_ptr + 4096/sizeof(unsigned int); //or &stack_ptr[4096/sizeof(unsigned int)]
+			c_thread->sp		= stack_ptr + (4096-sizeof(unsigned int))/sizeof(unsigned int);
+			c_thread->ip		= tramp_testing;
 			//c_thread->fn		= ?;
 			//c_thread->params	= ?;
-			runqueue = (lightweight_thread**) malloc (sizeof (lightweight_thread));
+			runqueue = (lwt_t*) malloc (sizeof (lightweight_thread));
 			*runqueue =  c_thread;
 
 			current_thread = *runqueue;
@@ -43,6 +46,7 @@ volatile lwt_t current_thread;
 		}
 
 		// Finally, create and add the new thread assuming current_thread and runqueue exist
+		int tramp_testing_params(void *ptr);
 
 		lwt_t thd_ptr 			= (lightweight_thread *) malloc(sizeof(lightweight_thread));
 		unsigned int *stack_ptr	= malloc(4096);//unsigned int
@@ -52,7 +56,7 @@ volatile lwt_t current_thread;
 		thd_ptr->params 		= data;
 		thd_ptr->sp_init 		= stack_ptr;
 		thd_ptr->sp		 		= stack_ptr + (4096-sizeof(unsigned int))/sizeof(unsigned int); //or &stack_ptr[4096/sizeof(unsigned int)]
-		thd_ptr->ip				= __lwt_trampoline_inline;
+		thd_ptr->ip				= tramp_testing_params(data);
 
 		printf("lwt_create: stack=%p, (%i) id = %i\n", thd_ptr->sp, thd_ptr->sp, thd_ptr->thread_id);
 
@@ -77,7 +81,7 @@ volatile lwt_t current_thread;
 	lwt_die(void *ptr)
 	{
 		//Runqueue_pop(runqueue);
-//		current_thread->
+		//current_thread->
 
 	}
 
@@ -88,8 +92,6 @@ volatile lwt_t current_thread;
 			printf("lwt_yield: current_thread(%i) yielding to (%i)\n", (current_thread)->thread_id, thread->thread_id);
 			if (runqueue){
 				printf("lwt_yield: !runqueue calling dispatch thread_TCB=%p, current_thread_TCB = %p\n", thread->sp, (*runqueue)->sp);
-				// TODO: switch from current_queue, correct? was runqueue...
-				//__lwt_dispatch(thread, *runqueue);
 				__lwt_dispatch(thread, current_thread);
 			}
 		}else{
@@ -108,13 +110,13 @@ volatile lwt_t current_thread;
 	unsigned int
 	lwt_id(lwt_t thread)
 	{
-		lwt_t t = thread;
-		return t->thread_id;
+		return thread->thread_id;
 	}
 
 	void
 	__lwt_schedule(void)
 	{
+		printf("__lwt_schedule: \n");
 		lightweight_thread *thread = __Runqueue_pop(runqueue);
 		printf("__lwt_schedule: thread TCB address %i (%p)\n", thread->sp, thread->sp);
 
@@ -128,94 +130,55 @@ volatile lwt_t current_thread;
 		}
 	}
 
+	volatile lwt_t savedcur, savednext;
+
 	void
 	__lwt_dispatch(lwt_t next, lwt_t current)
 	{
 
 		printf("__lwt_dispatch: \n");// current_thread %i\n",current_thread->thread_id);
 
+		savedcur = current;
+		savednext = next;
+
 		if (current){
 
-			printf("__lwt_dispatch:\n	next.SP=	%i\n	next.IP=	%i\n	current.SP=	%i\n	current.IP=	%i\n", next->sp, next->ip, current->sp, current->ip);
-
+			printf("__lwt_dispatch (before):\n	next.SP=	%p\n	next.IP=	%p\n	current.SP=	%p\n	current.IP=	%p\n", next->sp, next->ip, current->sp, current->ip);
 			unsigned int *ptr_sp = &(current->sp);
 			unsigned int *ptr_ip = &(current->ip);
-
-			//printf("__lwt_dispatch: calling dipatch.S, current SP_ptr is %i, ptr_ip %i", ptr_sp, ptr_ip);
-			//printf("__lwt_dispatch: calling dipatch.S, current SP_ptr is %i, ptr_ip %i, *ptr_sp %i, *ptr_ip %i", ptr_sp, ptr_ip, *ptr_sp, *ptr_ip);
-
-			dispatcher(next->sp, next->ip, current->sp, ptr_ip);
-
-			//printf("__lwt_dispatch: calling dipatch.S, current SP_ptr is %i, ptr_ip %i, *ptr_sp %i, *ptr_ip %i", ptr_sp, ptr_ip, *ptr_sp, *ptr_ip);
-			//printf("__lwt_dispatch: calling dipatch.S, current SP_ptr is %i, ptr_ip %i", ptr_sp, ptr_ip);
-
-			//__lwt_start_test4(next->sp, next->ip, current->sp, current->ip);
-			printf("__lwt_dispatch:\n	next.SP=	%i\n	next.IP=	%i\n	current.SP=	%i\n	current.IP=	%i\n", next->sp, next->ip, current->sp, current->ip);
-
-
-
+			dispatcher(next->sp, next->ip, ptr_sp, ptr_ip);
+			printf("__lwt_dispatch (after):\n	next.SP=	%p\n	next.IP=	%p\n	current.SP=	%p\n	current.IP=	%p\n", next->sp, next->ip, current->sp, current->ip);
 		}else{
 			printf("__lwt_dispatch: no thread executing. skipping dispatch.\n");
 		}
 
-		// TODO: figure this one out.
 		current_thread = next;
 
-		//printf("__lwt_dispatch:\n	current_thread.SP=	%i\n	current_thread.IP=	%i\n", current_thread->sp, current_thread->ip);
-
-
 		printf("#### __lwt_dispatch: current_thread is now %i\n", current_thread->thread_id);
-		//current_thread->thread_id = next->thread_id;
-		//printf("__lwt_dispatch: after current_thread %i\n",current_thread->thread_id);
-	}
 
-	/*
-	void
-	inline_dispatcher(unsigned int next_sp, unsigned int next_ip, unsigned int ptr_sp, unsigned int ptr_ip)
-	{
-
-		asm volatile("push %ebp\n\t"
-					 "mov %esp, %ebp\n\t"
-					 "pushal\n\t"
-					 "movl 0x14(%ebp), %ecx \n\t"
-					 "movl 0x10(%ebp), %edx \n\t"
-					 "movl $1f,  (%ecx)\n\t"
-					 "movl %ebp, (%edx)\n\t"
-					 "movl (%edx), %ebp\n\t"
-					 "jmp  (%ecx)\n\t"
-					 "1: 	popal\n\t"
-					 " 	leave\n\t"
-					 "	ret\n\t");
-	}
-*/
-	void
-	__lwt_trampoline_inline()
-	{
-		//__lwt_start(NULL, NULL);
-		// call __lwt_start
-		printf("__lwt_trampoline_inline: entered\n");
-		//__asm__("push $99\n\t"
-		//		"call __lwt_start_test1\n\t");
-		//__asm__("push (%esp)\n\t"); // return address
-
-/*
-		asm volatile("push %0\n\t"
-					 "push %1\n\t"
-		         	 "call __lwt_start\n\t"
-						: // x is output operand and it's related to %0
-						:"r"(current_thread->fn), "r" (current_thread->params)  // 11 is input operand and it's related to %1
-						:"%eax"); // %eax is clobbered register
-*/
-		//__asm__("call __lwt_start\n\t");
-		//		"ret\n\t");
 	}
 
 	void
-	__lwt_start(lwt_fn_t fn, void *data)
+	__lwt_start(void) /* lwt_fn_t fn, void *data */
 	{
-		printf("__lwt_start(): entered");
-		lwt_t t = lwt_current();
-		lwt_die(t->fn(t->params));
+		//__lwt_dispatch(savedcur, savednext);
+		//__lwt_start_test0();
+		//__asm__("push \n\t");
+		//__asm__("call __lwt_call_test1\n\t");
+
+		(current_thread)->fn;//((current_thread)->params);
+		printf("__lwt_start(): entered\n");
+
+		//int (*func)(int) = (int (*)(void))current_thread->fn;
+		//int x = func(current_thread->params);
+
+		//int (*func)(void) = (int (*)(void)) current_thread->fn;
+		//int x = func();
+		//t(1);
+		//
+
+		//lwt_t t = lwt_current();
+		//lwt_die(t->fn(t->params));
 
 	}
 
@@ -233,8 +196,10 @@ volatile lwt_t current_thread;
 			printf("#### __Runqueue_add: !list: current_thread is now %i\n", current_thread->thread_id);
 		}
 
+
 		lightweight_thread *new_node = (lightweight_thread*) malloc (sizeof (lightweight_thread));
 		new_node = thd_ptr;
+
 		new_node->thread_id = thd_ptr->thread_id;
 		new_node->fn = thd_ptr->fn;
 		new_node->ip = thd_ptr->ip;

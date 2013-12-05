@@ -6,22 +6,45 @@
  */
 #include <stdlib.h>
 #include <stdio.h>
+#include "test.h"
+
+void __lwt_call_test1(struct thd_params_t *args_in){
+	//params->a
+
+	struct thd_params_t *args = malloc(sizeof(struct thd_params_t));
+	args = args_in;
+	int i = args->a;
+
+	printf("*******__lwt_start_test1 %i\n", i);
+}
+
+int
+__lwt_call_params(void  *args_in){
+	//params->a
+
+	struct thd_params_t args = (struct thd_params_t*) args_in;
+	int i = args->a;
+
+	printf("*******__lwt_start_test1 %i\n", i);
+
+	return i;
+}
+
 
 void __lwt_start_test0(void){
 	printf("*******__lwt_start_test0)\n");
 }
 
 void __lwt_start_test1(unsigned int i){
-	//params->a
-	printf("*******__lwt_start_test1 %p)\n", i);
+	printf("*******__lwt_start_test1 %i)\n", i);
 }
 
 void __lwt_start_test2(unsigned int i, unsigned int j){
-	printf("__lwt_start_test, %p %p)\n", i,j);
+	printf("__lwt_start_test, %i %i)\n", i,j);
 }
 
 void __lwt_start_test3(unsigned int i, unsigned int j, unsigned int k){
-	printf("*** __lwt_start_test,%p %p %p)\n", i,j,k);
+	printf("*** __lwt_start_test,%i %i %i)\n", i,j,k);
 }
 
 void __lwt_start_test4(unsigned int i, unsigned int j, unsigned int k, unsigned int l){
