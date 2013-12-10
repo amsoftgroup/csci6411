@@ -51,10 +51,8 @@ unsigned int lwt_id(lwt_t);
 
 
 //int __lwt_start(void);
-//void __lwt_start(lwt_fn_t fn, void *data);
-void __lwt_start(void);
-
-
+void __lwt_start(lwt_fn_t fn, void *data);
+//void __lwt_start(void);
 
 void __lwt_schedule(void);
 void __lwt_dispatch(lwt_t, lwt_t );
